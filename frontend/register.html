@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LMS - Register</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .field-error {
+            color: red;
+            font-size: 0.85rem;
+            margin-top: 4px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <h2>Create an Account</h2>
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name">
+                <span id="name-error" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email">
+                <span id="email-error" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label for="phoneNumber">Phone Number</label>
+                <input type="text" id="phoneNumber">
+                <span id="phoneNumber-error" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password">
+                <span id="password-error" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label for="role">Register As</label>
+                <select id="role">
+                    <option value="STUDENT">Student</option>
+                    <option value="INSTRUCTOR">Instructor</option>
+                    <option value="ADMIN">Admin</option>
+                </select>
+                <span id="role-error" class="field-error"></span>
+            </div>
+            <button type="submit">Register</button>
+        </form>
+        <p id="message" style="color: red;"></p>
+        <p>Already have an account? <a href="login.html">Login here</a></p>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        document.getElementById("registerForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            
+            // Clear previous errors
+            document.querySelectorAll(".field-error").forEach(el => el.textContent = "");
+            const messageEl = document.getElementById("message");
+            messageEl.textContent = "";
+
+            const name = document.getElementById("name").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const phoneNumber = document.getElementById("phoneNumber").value.trim();
+            const password = document.getElementById("password").value.trim();
+            const role = document.getElementById("role").value;
+
+            try {
+                await apiRequest("/api/auth/register", {
+                    method: "POST",
+                    body: JSON.stringify({ name, email, phoneNumber, password, role })
+                });
+
+                alert(`Registration successful as ${role}! Redirecting to login...`);
+                window.location.href = "login.html";
+            } catch (error) {
+                try {
+                    const errorJson = JSON.parse(error.message);
+                    
+                    if (errorJson.error) {
+                        messageEl.textContent = errorJson.error;
+                    } else {
+                        for (const [field, message] of Object.entries(errorJson)) {
+                            const errorEl = document.getElementById(`${field}-error`);
+                            if (errorEl) {
+                                errorEl.textContent = message;
+                            }
+                        }
+                    }
+                } catch (parseError) {
+                    messageEl.textContent = error.message || "Registration failed. Please try again.";
+                }
+            }
+        });
+    </script>
+</body>
+</html>
